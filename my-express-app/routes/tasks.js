@@ -1,64 +1,55 @@
-const express = require('express');
-const router = express.Router();
-const Task = require('../models/task');
-
-// Create a new task
-router.post('/tasks', async (req, res) => {
-  try {
-    const task = new Task(req.body);
-    await task.save();
-    res.status(201).json(task);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Get all tasks
+const express = require('express')
+const router = express.Router()
+const task = require('../models/task')
+ 
 router.get('/tasks', async (req, res) => {
-  try {
-    const tasks = await Task.find();
-    res.status(200).json(tasks);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update a task by ID
-router.patch('/tasks/:id', async (req, res) => {
-  const updates = Object.keys(req.body);
-  const allowedUpdates = ['title', 'description', 'completed'];
-  const isValidOperation = updates.every(update => allowedUpdates.includes(update));
-
-  if (!isValidOperation) {
-    return res.status(400).json({ error: 'Invalid updates!' });
-  }
-
-  try {
-    const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-
-    if (!task) {
-      return res.status(404).json();
+    try {
+        const tasks = await task.find();
+        res.status(200).json({ message: 'hello working', tasks });
+    } catch (err) {
+        res.status(500).send('Error' + err);
     }
-
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
 });
 
-// Delete a task by ID
-router.delete('/tasks/:id', async (req, res) => {
-  try {
-    const task = await Task.findByIdAndDelete(req.params.id);
+// router.get('/tasks:id', async (req, res) => {
 
-    if (!task) {
-      return res.status(404).json();
+//     try {
+//         const tasks1 = await task.findById(req.params.id);
+//         res.status(200).json({ tasks1});
+//     } catch (err) {
+//         res.status(500).send('Error' + err);
+//     }
+// });
+
+
+router.post('/tasks', async (req, res) => { 
+    const newTask = new task({
+        title: req.body.title,
+        description: req.body.description,
+        completed: req.body.completed,
+    })
+
+    try {
+        const savedTask = await newTask.save()
+        res.json(savedTask)
+    } catch (err) {
+        res.status(500).send('Error')
     }
+})
 
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+router.patch('/tasks:id', async (req, res) => {
+    try {
+        const updatedTask = await task.findById(req.params.id);
+        updatedTask.title = req.body.title;
+        updatedTask.description = req.body.description;
+        updatedTask.completed = req.body.completed;
+        const savedTask = await updatedTask.save();
+        res.json(savedTask);
+    } catch (err) {
+        res.status(500).send('Error');
+    }
 });
 
-module.exports = router;
+
+
+module.exports = router
